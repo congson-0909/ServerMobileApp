@@ -2,7 +2,7 @@ const whois = require("whois-json");
 const { parse } = require("tldts");
 const fs = require("fs");
 const path = require("path");
-
+const whoisRaw = require('whois');
 function getTLD(domain) {
   const parts = domain.toLowerCase().split(".");
   const tldCandidates = [];
@@ -32,7 +32,7 @@ function parseRelevantDate(dateStr) {
   const match = lower.match(/(?:before\s*)?([a-z]{3,9})?-?(\d{4})/i);
 
   if (match) {
-    const monthStr = match[1] || "Jan"; // mặc định tháng 1 nếu thiếu
+    const monthStr = match[1] || "Jan"; 
     const year = parseInt(match[2], 10);
     const months = {
       jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6,
@@ -59,6 +59,7 @@ async function analyzeWhois(url) {
     const parser = getParser(tld);
     const whoisData = await whois(domain);
     const raw = parser(domain, whoisData);
+
 
     let creationDateRaw =
       whoisData.creationDate ||
