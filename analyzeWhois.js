@@ -109,6 +109,7 @@ async function analyzeWhois(url) {
       null;
 
     return {
+      raw,
       domain,
       country,
       creationDate: creationDate.toISOString(),
