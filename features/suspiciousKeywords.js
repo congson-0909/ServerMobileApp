@@ -1,7 +1,7 @@
 const keywords = [
     "login", "free", "verify", "update", "account", "win", "gift", "confirm",
     "bank", "secure", "password", "reset", "claim", "access", "prize",
-    "security", "signin", "support", "payment", "unlock"
+    "security", "signin", "support", "payment", "unlock" ,"malware" ,"phishing"
   ];
   
   module.exports = function(_, url) {

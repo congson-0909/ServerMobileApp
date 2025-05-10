@@ -11,7 +11,11 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "axios": "^1.9.0",
+    "cors": "^2.8.5",
     "express": "^5.1.0",
+    "node-fetch": "^2.7.0",
+    "puppeteer": "^24.8.2",
     "tldts": "^6.1.85",
     "whois-json": "^2.0.4",
     "whois-raw": "^0.1.10"

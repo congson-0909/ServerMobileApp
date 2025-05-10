@@ -58,10 +58,11 @@ async function analyzeWhois(url) {
     const tld = getTLD(domain);
     const parser = getParser(tld);
     const whoisData = await whois(domain);
-    const raw = parser(domain, whoisData);
+    const raw = await parser(domain, whoisData);
 
 
     let creationDateRaw =
+      raw.registeredOn ||
       whoisData.creationDate ||
       whoisData.createdDate ||
       whoisData["Creation Date"];
@@ -82,6 +83,7 @@ async function analyzeWhois(url) {
     const isRecentlyRegistered = ageInDays < 180;
 
     const registrant =
+      raw.registrant ||
       whoisData.registrantOrganization ||
       whoisData.registrantName ||
       whoisData.org ||
