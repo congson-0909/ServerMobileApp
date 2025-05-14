@@ -1,13 +1,19 @@
 const analyzeStructure = require("./analyzeStructure");
 const analyzeWhois = require("./analyzeWhois");
+const checkUrlhaus = require("./checkUrlhaus");
+const checkGSB = require("./checkGSB"); // 🆕
 const { URL } = require("url");
 
 function isSpecialDomain(hostname) {
   const specialPatterns = [
     "example.com", "example.net", "example.org",
-    "localhost", "test", "invalid", "local", "onion"
+    "localhost", "127.0.0.1", "::1", "dev.local", "staging.local", "localtest.me",
+    "test", "invalid", "local",
+    "onion"
   ];
-  return specialPatterns.some(pattern => hostname.endsWith(pattern) || hostname === pattern);
+  return specialPatterns.some(pattern =>
+    hostname === pattern || hostname.endsWith(`.${pattern}`)
+  );
 }
 
 async function analyze(url) {
@@ -16,8 +22,12 @@ async function analyze(url) {
   let whoisResult = {
     score: 0,
     risk: "unknown",
-    reasons: ["WHOIS skipped for special or non-public domain"],
+    reasons: ["WHOIS skipped for special or non-public domain"]
   };
+
+  let urlhausResult = { detected: false };
+
+  let gsbResult = { found: false, threatTypes: [], score: 0 };
 
   try {
     const parsed = new URL(url.startsWith("http") ? url : `http://${url}`);
@@ -25,21 +35,24 @@ async function analyze(url) {
 
     if (!isSpecialDomain(hostname)) {
       whoisResult = await analyzeWhois(url);
+      urlhausResult = await checkUrlhaus(url);
+      gsbResult = await checkGSB(url);
+      urlhausResult = await checkUrlhaus(url);
     }
   } catch (err) {
     whoisResult = {
       score: 0,
       risk: "unknown",
-      reasons: ["Invalid hostname format or URL"],
+      reasons: ["Invalid hostname format or URL"]
     };
   }
 
-  const score = structureResult.score + whoisResult.score;
+  const score = structureResult.score + whoisResult.score + urlhausResult.score + gsbResult.score;
 
   let finalRisk = "safe";
-  if (score >= 6) finalRisk = "dangerous";
-  else if (score >= 3) finalRisk = "suspicious";
-  if (whoisResult.risk === "unknown") finalRisk = "unknown";
+  if (score >= 8) finalRisk = "dangerous";
+  else if (score >= 4) finalRisk = "suspicious";
+  if (gsbResult.found || urlhausResult.detected) finalRisk = "dangerous";
 
   return {
     url,
@@ -47,6 +60,8 @@ async function analyze(url) {
     finalRisk,
     structure: structureResult,
     whois: whoisResult,
+    urlhaus: urlhausResult,
+    gsb: gsbResult 
   };
 }
 
