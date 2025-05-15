@@ -14,13 +14,15 @@ async function checkUrlhaus(url) {
       return {
         found: true,
         source: "URLhaus",
-        score: 8 
+        score: 8,
+        reasons: ["Malware detected via URLhaus"]
       };
     } else {
       return {
         found: false,
         source: "URLhaus",
-        score: 0
+        score: 0,
+        reasons: []
       };
     }
   } catch (error) {
@@ -29,6 +31,7 @@ async function checkUrlhaus(url) {
       found: false,
       source: "URLhaus",
       score: 0,
+      reasons: [],
       error: error.message
     };
   }

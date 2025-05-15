@@ -1,7 +1,8 @@
 const analyzeStructure = require("./analyzeStructure");
 const analyzeWhois = require("./analyzeWhois");
+const analyzeIpInfo = require("./analyzeIpInfo"); 
 const checkUrlhaus = require("./checkUrlhaus");
-const checkGSB = require("./checkGSB"); // 🆕
+const checkGSB = require("./checkGSB");
 const { URL } = require("url");
 
 function isSpecialDomain(hostname) {
@@ -16,6 +17,10 @@ function isSpecialDomain(hostname) {
   );
 }
 
+function isIpAddress(hostname) {
+  return /^[\d.]+$/.test(hostname); 
+}
+
 async function analyze(url) {
   const structureResult = analyzeStructure(url);
 
@@ -25,19 +30,22 @@ async function analyze(url) {
     reasons: ["WHOIS skipped for special or non-public domain"]
   };
 
-  let urlhausResult = { detected: false };
-
-  let gsbResult = { found: false, threatTypes: [], score: 0 };
+  let urlhausResult = { found: false, score: 0, reasons: [] };
+  let gsbResult = { found: false, score: 0, threatTypes: [], reasons: [] };
 
   try {
     const parsed = new URL(url.startsWith("http") ? url : `http://${url}`);
     const hostname = parsed.hostname;
 
     if (!isSpecialDomain(hostname)) {
-      whoisResult = await analyzeWhois(url);
+      if (isIpAddress(hostname)) {
+        whoisResult = await analyzeIpInfo(hostname);
+      } else {
+        whoisResult = await analyzeWhois(url);
+      }
+
       urlhausResult = await checkUrlhaus(url);
       gsbResult = await checkGSB(url);
-      urlhausResult = await checkUrlhaus(url);
     }
   } catch (err) {
     whoisResult = {
@@ -52,7 +60,7 @@ async function analyze(url) {
   let finalRisk = "safe";
   if (score >= 8) finalRisk = "dangerous";
   else if (score >= 4) finalRisk = "suspicious";
-  if (gsbResult.found || urlhausResult.detected) finalRisk = "dangerous";
+  if (gsbResult.found || urlhausResult.found) finalRisk = "dangerous";
 
   return {
     url,
@@ -61,7 +69,7 @@ async function analyze(url) {
     structure: structureResult,
     whois: whoisResult,
     urlhaus: urlhausResult,
-    gsb: gsbResult 
+    gsb: gsbResult
   };
 }
 

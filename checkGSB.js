@@ -10,16 +10,26 @@ function scoreThreatTypes(threatTypes) {
     POTENTIALLY_HARMFUL_APPLICATION: 4
   };
 
+  const reasonsMap = {
+    MALWARE: "Malware detected via Google Safe Browsing",
+    SOCIAL_ENGINEERING: "Phishing detected via Google Safe Browsing",
+    UNWANTED_SOFTWARE: "Unwanted software detected via Google Safe Browsing",
+    POTENTIALLY_HARMFUL_APPLICATION: "Potentially harmful application detected"
+  };
+
   const uniqueThreats = [...new Set(threatTypes)];
   let total = 0;
+  const reasons = [];
 
   uniqueThreats.forEach(type => {
     total += scoreMap[type] || 0;
+    if (reasonsMap[type]) reasons.push(reasonsMap[type]);
   });
 
   return {
     score: total,
-    uniqueThreats
+    uniqueThreats,
+    reasons
   };
 }
 
@@ -53,12 +63,13 @@ async function checkWithGoogleSafeBrowsing(url) {
 
     const matches = response.data?.matches || [];
     const threatTypes = matches.map(m => m.threatType);
-    const { score, uniqueThreats } = scoreThreatTypes(threatTypes);
+    const { score, uniqueThreats, reasons } = scoreThreatTypes(threatTypes);
 
     return {
       found: threatTypes.length > 0,
       threatTypes: uniqueThreats,
-      score
+      score,
+      reasons
     };
   } catch (error) {
     console.error("GSB Error:", error.message);
@@ -66,6 +77,7 @@ async function checkWithGoogleSafeBrowsing(url) {
       found: false,
       threatTypes: [],
       score: 0,
+      reasons: [],
       error: error.message
     };
   }
