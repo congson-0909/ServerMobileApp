@@ -14,7 +14,7 @@ async function checkUrlhaus(url) {
       return {
         found: true,
         source: "URLhaus",
-        score: 8,
+        score: 10,
         reasons: ["Malware detected via URLhaus"]
       };
     } else {

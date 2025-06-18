@@ -4,10 +4,10 @@ const GSB_API_KEY = "AIzaSyBd_EX5XKA-5PqIUF0do3qW3K-ktL8PJJc";
 
 function scoreThreatTypes(threatTypes) {
   const scoreMap = {
-    MALWARE: 8,
-    SOCIAL_ENGINEERING: 8,
-    UNWANTED_SOFTWARE: 4,
-    POTENTIALLY_HARMFUL_APPLICATION: 4
+    MALWARE: 10,
+    SOCIAL_ENGINEERING: 10,
+    UNWANTED_SOFTWARE: 5,
+    POTENTIALLY_HARMFUL_APPLICATION: 5
   };
 
   const reasonsMap = {
