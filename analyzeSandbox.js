@@ -24,13 +24,7 @@ async function analyzeBehavior(url) {
       requests.push(request.url());
     });
 
-    let timeoutTriggered = false;
-
-    try {
-      await page.goto(url, { timeout: 5000, waitUntil: 'networkidle2' });
-    } catch (e) {
-      timeoutTriggered = true;
-    }
+    await page.goto(url, { timeout:4000, waitUntil: 'networkidle2' });
 
     const suspiciousRequests = requests.filter(r =>
       r.includes('.exe') || r.includes('.apk') || r.includes('dropbox') || r.includes('mediafire')
@@ -66,22 +60,6 @@ async function analyzeBehavior(url) {
       reasons.push('Page contains form(s)');
     }
 
-    // Nếu timeout nhưng không phát hiện bất cứ hành vi đáng ngờ nào
-    if (timeoutTriggered && reasons.length === 0) {
-      return {
-        score: 0,
-        suspicious: false,
-        reasons: [],
-        details: {
-          totalRequests: requests.length,
-          suspiciousRequests,
-          iframeCount,
-          scriptCount,
-          formCount
-        }
-      };
-    }
-
     return {
       score,
       suspicious: score >= 3,
@@ -97,9 +75,7 @@ async function analyzeBehavior(url) {
   } catch (err) {
     return {
       score: 0,
-      suspicious: false,
       reasons: [],
-      details: {}
     };
   }
 }

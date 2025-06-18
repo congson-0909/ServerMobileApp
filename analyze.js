@@ -41,22 +41,6 @@ async function getMLPrediction(url) {
   }
 }
 
-// ✅ Clean sandbox result nếu không có lý do rõ ràng
-function cleanSandboxResult(result) {
-  if (
-    !result.reasons ||
-    result.reasons.length === 0 ||
-    (result.reasons.length === 1 &&
-     result.reasons[0].includes("ERR_BLOCKED_BY_CLIENT"))
-  ) {
-    return {
-      ...result,
-      reasons: ["Not detected by Sandbox Testing"]
-    };
-  }
-  return result;
-}
-
 async function analyze(url) {
   const structureResult = analyzeStructure(url);
 
@@ -98,7 +82,7 @@ async function analyze(url) {
         urlhausResult = await checkUrlhaus(url);
       }
 
-      behaviorResult = cleanSandboxResult(await analyzeBehavior(url));
+      behaviorResult = await analyzeBehavior(url);
       mlResult = await getMLPrediction(url);
     }
   } catch (err) {
@@ -141,7 +125,7 @@ async function analyze(url) {
     APIdetect.urlhaus = urlhausResult;
   } else {
     APIdetect.score = 0;
-    APIdetect.reasons = ["Not detected by Google Safe Browsing or URLhaus"];
+    APIdetect.reasons = [];
   }
 
   // ✅ Trả kết quả cuối cùng
