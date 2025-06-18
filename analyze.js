@@ -4,8 +4,11 @@ const analyzeIpInfo = require("./analyzeIpInfo");
 const checkUrlhaus = require("./checkUrlhaus");
 const checkGSB = require("./checkGSB");
 const analyzeBehavior = require("./analyzeSandbox");
-const axios = require("axios"); // ✅ NEW
+const axios = require("axios");
 const { URL } = require("url");
+
+// 🔧 Thay ngrok URL bằng URL hiện tại của bạn
+const ML_API_URL = "https://ff78-112-197-86-109.ngrok-free.app/predict";
 
 function isSpecialDomain(hostname) {
   const specialPatterns = [
@@ -21,12 +24,10 @@ function isSpecialDomain(hostname) {
 function isIpAddress(hostname) {
   return /^[\d.]+$/.test(hostname);
 }
-
-// ✅ NEW: Hàm gọi ML model qua ngrok
 async function getMLPrediction(url) {
   try {
     const response = await axios.post(
-      "https://ff78-112-197-86-109.ngrok-free.app/predict",
+      ML_API_URL,
       { url },
       { headers: { "Content-Type": "application/json" } }
     );
@@ -39,6 +40,22 @@ async function getMLPrediction(url) {
       score: 0
     };
   }
+}
+
+// ✅ Clean sandbox result nếu không có lý do rõ ràng
+function cleanSandboxResult(result) {
+  if (
+    !result.reasons ||
+    result.reasons.length === 0 ||
+    (result.reasons.length === 1 &&
+     result.reasons[0].includes("ERR_BLOCKED_BY_CLIENT"))
+  ) {
+    return {
+      ...result,
+      reasons: ["Not detected by Sandbox Testing"]
+    };
+  }
+  return result;
 }
 
 async function analyze(url) {
@@ -82,9 +99,8 @@ async function analyze(url) {
         urlhausResult = await checkUrlhaus(url);
       }
 
-      behaviorResult = await analyzeBehavior(url);
-
-      mlResult = await getMLPrediction(url); // ✅ NEW: ML
+      behaviorResult = cleanSandboxResult(await analyzeBehavior(url));
+      mlResult = await getMLPrediction(url);
     }
   } catch (err) {
     whoisResult = {
@@ -100,7 +116,7 @@ async function analyze(url) {
     ? urlhausResult.score
     : 0;
 
-  // 🔁 EDIT: tính finalScore có cả ML
+  // ✅ Tổng điểm tổng hợp
   const score =
     structureResult.score +
     whoisResult.score +
@@ -108,7 +124,7 @@ async function analyze(url) {
     behaviorResult.score +
     mlResult.score;
 
-  // 🔁 EDIT: xét finalRisk có thêm ML score
+  // ✅ Đánh giá rủi ro cuối cùng
   let finalRisk = "safe";
   if (gsbResult.found || urlhausResult.found) {
     finalRisk = "dangerous";
@@ -118,6 +134,7 @@ async function analyze(url) {
     finalRisk = "suspicious";
   }
 
+  // ✅ Kết quả API detect
   const APIdetect = {};
   if (gsbResult.found) {
     APIdetect.gsb = gsbResult;
@@ -128,7 +145,7 @@ async function analyze(url) {
     APIdetect.reasons = ["Not detected by Google Safe Browsing or URLhaus"];
   }
 
-  // ✅ FINAL OUTPUT
+  // ✅ Trả kết quả cuối cùng
   return {
     url,
     finalScore: score,
@@ -138,7 +155,6 @@ async function analyze(url) {
     APIdetect,
     ml: mlResult,
     behavior: behaviorResult
-     // ✅ NEW: ML Result xuất hiện trong JSON trả về
   };
 }
 
