@@ -7,8 +7,7 @@ const analyzeBehavior = require("./analyzeSandbox");
 const axios = require("axios");
 const { URL } = require("url");
 
-// 🔧 Thay ngrok URL bằng URL hiện tại của bạn
-const ML_API_URL = "https://ff78-112-197-86-109.ngrok-free.app/predict";
+const ML_API_URL = "https://c415-112-197-86-109.ngrok-free.app/predict";
 
 function isSpecialDomain(hostname) {
   const specialPatterns = [
